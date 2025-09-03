@@ -16,9 +16,9 @@ def banner():
 ###########################################################
 #                                                         #
 #                    CMProbe                              #
-#     Primer escáner de puertos por Cristian Muñoz        #
+#      Primer escáner de puertos por Cristian Muñoz       #
 #                                                         #
-#                    (2025)                               #
+#                      (2025)                             #
 #                                                         #
 ###########################################################
     """)
@@ -36,15 +36,17 @@ def check_host(host):
 
 def escaner_de_puertos(host, puerto, tipo_escaneo, verbose, output):
     """
-    Escanea un solo puerto usando el escaneo SYN (-sS) o UDP (-sU) y maneja la salida.
+    Escanea un solo puerto y maneja la salida.
     """
     try:
         nm = nmap.PortScanner()
         if tipo_escaneo == 'tcp':
-            nm.scan(host, arguments=f'-sS -sV -p {puerto}')
+            # Se agregó la opción --host-timeout para evitar que el programa se cuelgue
+            nm.scan(host, arguments=f'-sS -sV -p {puerto} --host-timeout 30s')
             protocolo = 'tcp'
         elif tipo_escaneo == 'udp':
-            nm.scan(host, arguments=f'-sU -sV -p {puerto}')
+            # Se agregó la opción --host-timeout para evitar que el programa se cuelgue
+            nm.scan(host, arguments=f'-sU -sV -p {puerto} --host-timeout 30s')
             protocolo = 'udp'
             
         if host in nm.all_hosts():
@@ -63,13 +65,17 @@ def escaner_de_puertos(host, puerto, tipo_escaneo, verbose, output):
                 if estado == 'open':
                     with print_lock:
                         info_servicio = nm[host][protocolo][puerto]
-                        open_message = f"\nPuerto {puerto}/{protocolo} está abierto\n  Servicio: {info_servicio.get('name', 'Desconocido')}\n  Versión: {info_servicio.get('version', 'Desconocido')}\n  Producto: {info_servicio.get('product', 'Desconocido')}"
+                        open_message = f"\nPuerto {puerto}/{protocolo} está abierto\n  Servicio: {info_servicio.get('name', 'Desconocido')}\n  Versión: {info_servicio.get('version', 'Desconocida')}\n  Producto: {info_servicio.get('product', 'Desconocido')}"
                         print(open_message)
                         if output:
                             output.write(open_message + '\n')
-        
+            
+    except nmap.PortScannerError as e:
+        # Se modificó para capturar y mostrar errores de Nmap, en lugar de ignorarlos
+        print(f"\n[!] Error de escaneo en el puerto {puerto}: {e}")
     except Exception as e:
-        pass
+        # Para cualquier otro error inesperado
+        print(f"\n[!] Error inesperado en el puerto {puerto}: {e}")
 
 
 def worker(cola, host, tipo_escaneo, verbose, output):
@@ -110,8 +116,8 @@ def main():
         info_file_path = os.path.join(resultados_dir, "informacion_escaner.txt")
         with open(info_file_path, "w") as info_file:
             info_file.write("****************************************\n")
-            info_file.write("           Resultados de CMProbe\n")
-            info_file.write("           by Cristian Muñoz 2025\n")
+            info_file.write("          Resultados de CMProbe\n")
+            info_file.write("          by Cristian Muñoz 2025\n")
             info_file.write("****************************************\n\n")
             info_file.write("Este archivo contiene los resultados de los escaneos realizados por el escáner de puertos CMProbe.\n")
 
@@ -157,9 +163,6 @@ def main():
     
     cola.join()
     
-    for hilo in hilos:
-        hilo.join(timeout=1)
-
     fin = time.time()
     
     final_message = f"\nEscaneo completo en {fin - inicio:.2f} segundos."
@@ -168,9 +171,8 @@ def main():
         output.write(final_message + '\n')
         output.close()
     
-    os.system('stty sane')
-    os.system('stty erase ^H')
-    os._exit(0)
+    # Se eliminaron los comandos 'os.system' y 'os._exit'
+    # para mejorar la compatibilidad y la limpieza del programa.
 
 if __name__ == "__main__":
     main()
