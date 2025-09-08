@@ -8,17 +8,23 @@ import time
 import os
 import sys
 
+# Constantes de configuración
+NUM_THREADS = 50
+
 # Bloqueo para evitar que los hilos de impresión se mezclen
 print_lock = threading.Lock()
 
 def banner():
+    """
+    Imprime un banner con información del escáner.
+    """
     print("""
 ###########################################################
 #                                                         #
 #                    CMProbe                              #
 #      Primer escáner de puertos por Cristian Muñoz       #
 #                                                         #
-#                      (2025)                             #
+#                       (2025)                            #
 #                                                         #
 ###########################################################
     """)
@@ -155,7 +161,7 @@ def main():
     inicio = time.time()
     
     hilos = []
-    for _ in range(50):
+    for _ in range(NUM_THREADS):
         hilo = threading.Thread(target=worker, args=(cola, host, tipo_escaneo, verbose_mode, output))
         hilo.daemon = True
         hilo.start()
