@@ -7,4 +7,4 @@ Para utilizar este escáner de puertos, asegúrate de tener Python instalado. Lu
 **Ejemplo de uso:**
 
 ```bash
-python3 escáner.py -t [dirección IP] -p [puerto inicial]-[puerto final]
+python3 escaner_cmprobe.py -t [dirección IP] -p [puerto inicial]-[puerto final] -u
